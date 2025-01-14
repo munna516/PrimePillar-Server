@@ -23,9 +23,23 @@ async function run() {
     // Database
     const DB = client.db("Prime-Pillar");
     const apartmentCollection = DB.collection("Apartments");
+    const agreementCollection = DB.collection("Agreements");
     // Get all apartments
     app.get("/apartments", async (req, res) => {
       const result = await apartmentCollection.find().toArray();
+      res.send(result);
+    });
+    // Post Agrements
+    app.post("/agreements", async (req, res) => {
+      const agreement = req.body;
+      const query = { email: agreement.email };
+      const data = await agreementCollection.findOne(query);
+      if (data) {
+        return res.send({
+          message: "Oops! You already have an active agreement",
+        });
+      }
+      const result = await agreementCollection.insertOne(agreement);
       res.send(result);
     });
     // Connect MongoDB Client
