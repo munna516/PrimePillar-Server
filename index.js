@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -46,7 +46,7 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "1200h",
+        expiresIn: "30d",
       });
       res.send({ token });
     });
@@ -82,6 +82,15 @@ async function run() {
         });
       }
       const result = await agreementCollection.insertOne(agreement);
+      res.send(result);
+    });
+    // Get All Agreements
+    app.get("/agreements", async (req, res) => {
+      const result = await agreementCollection.find().toArray();
+      result.map((agreement) => {
+        const date = new ObjectId(agreement._id).getTimestamp();
+        agreement.requestDate = date;
+      });
       res.send(result);
     });
     // Announcement
