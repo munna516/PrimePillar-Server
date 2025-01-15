@@ -40,6 +40,7 @@ async function run() {
     const DB = client.db("Prime-Pillar");
     const apartmentCollection = DB.collection("Apartments");
     const agreementCollection = DB.collection("Agreements");
+    const announcementCollection = DB.collection("Announcements");
     // JWT API
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -64,6 +65,12 @@ async function run() {
         });
       }
       const result = await agreementCollection.insertOne(agreement);
+      res.send(result);
+    });
+    // Announcement
+    app.post("/announcements", async (req, res) => {
+      const announcement = req.body;
+      const result = await announcementCollection.insertOne(announcement);
       res.send(result);
     });
     // Connect MongoDB Client
