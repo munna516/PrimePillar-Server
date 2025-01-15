@@ -41,6 +41,7 @@ async function run() {
     const apartmentCollection = DB.collection("Apartments");
     const agreementCollection = DB.collection("Agreements");
     const announcementCollection = DB.collection("Announcements");
+    const usersCollection = DB.collection("Users");
     // JWT API
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -48,6 +49,22 @@ async function run() {
         expiresIn: "1200h",
       });
       res.send({ token });
+    });
+    // Users
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      if (!user.email) return;
+      const isFound = await usersCollection.findOne({ email: user.email });
+      if (isFound) return;
+      user.role = "user";
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+    // Get a role By
+    app.get("/users/role/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const result = await usersCollection.findOne({ email });
+      res.send(result);
     });
     // Get all apartments
     app.get("/apartments", async (req, res) => {
@@ -71,6 +88,11 @@ async function run() {
     app.post("/announcements", async (req, res) => {
       const announcement = req.body;
       const result = await announcementCollection.insertOne(announcement);
+      res.send(result);
+    });
+    // Get all announcement
+    app.get("/announcements", async (req, res) => {
+      const result = await announcementCollection.find().toArray();
       res.send(result);
     });
     // Connect MongoDB Client
