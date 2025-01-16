@@ -19,7 +19,7 @@ const verifyToken = (req, res, next) => {
     if (err) {
       return res.status(401).send({ message: "Unauthorized access!!" });
     }
-    req.decoded = decoded;
+    req.user = decoded;
     next();
   });
 };
@@ -42,6 +42,20 @@ async function run() {
     const agreementCollection = DB.collection("Agreements");
     const announcementCollection = DB.collection("Announcements");
     const usersCollection = DB.collection("Users");
+    const memberCollection = DB.collection("Apartment-Members");
+    // Verify admin
+    const verifyAdmin = async (req, res, next) => {
+      // console.log('data from verifyToken middleware--->', req.user?.email)
+      const email = req.user?.email;
+      const query = { email };
+      const result = await usersCollection.findOne(query);
+      if (!result || result?.role !== "admin")
+        return res
+          .status(403)
+          .send({ message: "Forbidden Access! Admin Only Actions!" });
+
+      next();
+    };
     // JWT API
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -61,7 +75,7 @@ async function run() {
       res.send(result);
     });
     // Get a role By
-    app.get("/users/role/:email", verifyToken, async (req, res) => {
+    app.get("/users/role/:email", async (req, res) => {
       const email = req.params.email;
       const result = await usersCollection.findOne({ email });
       res.send(result);
@@ -86,13 +100,47 @@ async function run() {
     });
     // Get All Agreements
     app.get("/agreements", async (req, res) => {
-      const result = await agreementCollection.find().toArray();
+      const query = { status: "Pending" };
+      const result = await agreementCollection.find(query).toArray();
       result.map((agreement) => {
         const date = new ObjectId(agreement._id).getTimestamp();
         agreement.requestDate = date;
       });
       res.send(result);
     });
+    app.post(
+      "/manage-agreement-request",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.body?.id;
+        const action = req.body?.action;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: "Checked",
+          },
+        };
+        const updateAgreement = await agreementCollection.updateOne(
+          query,
+          updateDoc
+        );
+        const agreement = await agreementCollection.findOne(query);
+        const email = agreement.email;
+        if (action === "accept") {
+          const query1 = { email };
+          const updateDoc1 = {
+            $set: {
+              role: "member",
+            },
+          };
+          const result = await usersCollection.updateOne(query1, updateDoc1);
+          res.send(result);
+        } else {
+          res.send({ message: "Agreement Rejected" });
+        }
+      }
+    );
     // Announcement
     app.post("/announcements", async (req, res) => {
       const announcement = req.body;
