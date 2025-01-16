@@ -85,6 +85,24 @@ async function run() {
       const result = await apartmentCollection.find().toArray();
       res.send(result);
     });
+    // Get all members
+    app.get("/members", verifyToken, verifyAdmin, async (req, res) => {
+      const query = { role: "member" };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+    // Remove Members
+    app.patch("/remove-members", verifyToken, verifyAdmin, async (req, res) => {
+      const email = req.body.email;
+      const query = { email };
+      const updateDoc = {
+        $set: {
+          role: "user",
+        },
+      };
+      const result = await usersCollection.updateOne(query,updateDoc);
+      res.send(result);
+    });
     // Post Agrements
     app.post("/agreements", async (req, res) => {
       const agreement = req.body;
