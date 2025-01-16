@@ -56,6 +56,18 @@ async function run() {
 
       next();
     };
+    // Verify Member
+    const verifyMember = async (req, res, next) => {
+      const email = req.user?.email;
+      const query = { email };
+      const result = await usersCollection.findOne(query);
+      if (!result || result?.role !== "member")
+        return res
+          .status(403)
+          .send({ message: "Forbidden Access! Member Only Actions!" });
+
+      next();
+    };
     // JWT API
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -100,7 +112,7 @@ async function run() {
           role: "user",
         },
       };
-      const result = await usersCollection.updateOne(query,updateDoc);
+      const result = await usersCollection.updateOne(query, updateDoc);
       res.send(result);
     });
     // Post Agrements
@@ -137,6 +149,7 @@ async function run() {
         const updateDoc = {
           $set: {
             status: "Checked",
+            acceptDate: new Date(),
           },
         };
         const updateAgreement = await agreementCollection.updateOne(
@@ -157,6 +170,17 @@ async function run() {
         } else {
           res.send({ message: "Agreement Rejected" });
         }
+      }
+    );
+    // Get a specific agreement
+    app.get(
+      "/agreement/:email",
+      verifyToken,
+      verifyMember,
+      async (req, res) => {
+        const email = req.params.email;
+        const result = await agreementCollection.findOne({ email });
+        res.send(result);
       }
     );
     // Announcement
