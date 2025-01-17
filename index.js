@@ -130,6 +130,19 @@ async function run() {
       const result = await agreementCollection.insertOne(agreement);
       res.send(result);
     });
+    // Admin Profile
+    app.get("/admin-profile", verifyToken, verifyAdmin, async (req, res) => {
+      const totalRoom = await apartmentCollection.estimatedDocumentCount();
+      const availableRoom = await apartmentCollection.countDocuments({
+        status: "available",
+      });
+      const totalUser = await usersCollection.countDocuments({ role: "user" });
+      const totalMember = await usersCollection.countDocuments({
+        role: "member",
+      });
+      const result = { totalRoom, totalMember, totalUser, availableRoom };
+      res.send(result);
+    });
     // Get All Agreements
     app.get("/agreements", async (req, res) => {
       const query = { status: "Pending" };
@@ -147,6 +160,7 @@ async function run() {
       async (req, res) => {
         const id = req.body?.id;
         const action = req.body?.action;
+        const apartmentId = req.body?.apartmentId;
         const query = { _id: new ObjectId(id) };
         const updateDoc = {
           $set: {
@@ -161,6 +175,16 @@ async function run() {
         const agreement = await agreementCollection.findOne(query);
         const email = agreement.email;
         if (action === "accept") {
+          const query2 = { _id: new ObjectId(apartmentId) };
+          const updatedoc2 = {
+            $set: {
+              status: "unavailable",
+            },
+          };
+          const updatedRes = await apartmentCollection.updateOne(
+            query2,
+            updatedoc2
+          );
           const query1 = { email };
           const updateDoc1 = {
             $set: {
@@ -202,6 +226,7 @@ async function run() {
       const result = await couponsCollection.find().toArray();
       res.send(result);
     });
+
     // Validate Coupons
     app.post(
       "/validate-coupons",
@@ -248,7 +273,7 @@ async function run() {
       verifyMember,
       async (req, res) => {
         const email = req.params.email;
-        const result =await paymentCollection.find({ email }).toArray();
+        const result = await paymentCollection.find({ email }).toArray();
         res.send(result);
       }
     );
