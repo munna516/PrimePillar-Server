@@ -238,9 +238,20 @@ async function run() {
     // Payments
     app.post("/payments", verifyToken, verifyMember, async (req, res) => {
       const paymentInfo = req.body;
-      const result =await paymentCollection.insertOne(paymentInfo);
+      const result = await paymentCollection.insertOne(paymentInfo);
       res.send(result);
     });
+    // Payment History
+    app.get(
+      "/payment-history/:email",
+      verifyToken,
+      verifyMember,
+      async (req, res) => {
+        const email = req.params.email;
+        const result =await paymentCollection.find({ email }).toArray();
+        res.send(result);
+      }
+    );
     // Get all announcement
     app.get("/announcements", async (req, res) => {
       const result = await announcementCollection.find().toArray();
