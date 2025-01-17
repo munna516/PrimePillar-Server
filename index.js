@@ -42,7 +42,7 @@ async function run() {
     const agreementCollection = DB.collection("Agreements");
     const announcementCollection = DB.collection("Announcements");
     const usersCollection = DB.collection("Users");
-    const memberCollection = DB.collection("Apartment-Members");
+    const couponsCollection = DB.collection("Coupons");
     // Verify admin
     const verifyAdmin = async (req, res, next) => {
       // console.log('data from verifyToken middleware--->', req.user?.email)
@@ -184,9 +184,20 @@ async function run() {
       }
     );
     // Announcement
-    app.post("/announcements", async (req, res) => {
+    app.post("/announcements", verifyToken, verifyAdmin, async (req, res) => {
       const announcement = req.body;
       const result = await announcementCollection.insertOne(announcement);
+      res.send(result);
+    });
+    // Post Coupons
+    app.post("/coupons", verifyToken, verifyAdmin, async (req, res) => {
+      const coupon = req.body;
+      const result = await couponsCollection.insertOne(coupon);
+      res.send(result);
+    });
+    // Get All Coupons
+    app.get("/coupons", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await couponsCollection.find().toArray();
       res.send(result);
     });
     // Get all announcement
