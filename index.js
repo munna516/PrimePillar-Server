@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 const app = express();
@@ -43,6 +44,7 @@ async function run() {
     const announcementCollection = DB.collection("Announcements");
     const usersCollection = DB.collection("Users");
     const couponsCollection = DB.collection("Coupons");
+    const paymentCollection = DB.collection("Payments");
     // Verify admin
     const verifyAdmin = async (req, res, next) => {
       // console.log('data from verifyToken middleware--->', req.user?.email)
@@ -198,6 +200,45 @@ async function run() {
     // Get All Coupons
     app.get("/coupons", verifyToken, verifyAdmin, async (req, res) => {
       const result = await couponsCollection.find().toArray();
+      res.send(result);
+    });
+    // Validate Coupons
+    app.post(
+      "/validate-coupons",
+      verifyToken,
+      verifyMember,
+      async (req, res) => {
+        const coupons = req.body.coupon;
+        const result = await couponsCollection.findOne({ code: coupons });
+        if (result) {
+          res.send(result);
+        } else {
+          res.send({ message: "Invalid Coupon" });
+        }
+      }
+    );
+    // Creating Payment Intent
+    app.post(
+      "/create-payment-intent",
+      verifyToken,
+      verifyMember,
+      async (req, res) => {
+        const { price } = req.body;
+        const amount = price * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      }
+    );
+    // Payments
+    app.post("/payments", verifyToken, verifyMember, async (req, res) => {
+      const paymentInfo = req.body;
+      const result =await paymentCollection.insertOne(paymentInfo);
       res.send(result);
     });
     // Get all announcement
