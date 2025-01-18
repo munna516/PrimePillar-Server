@@ -99,6 +99,18 @@ async function run() {
       const result = await apartmentCollection.find().toArray();
       res.send(result);
     });
+    // Get Apartment search by range
+    app.get("/apartments-price", async (req, res) => {
+      const { minPrice, maxPrice } = req.query;
+      const query = {};
+      if (minPrice) query.rent = { $gte: Number(minPrice) };
+      if (maxPrice) query.rent = { ...query.rent, $lte: Number(maxPrice) };
+      const result = await apartmentCollection
+        .find(query)
+        .sort({ rent: 1 })
+        .toArray();
+      res.send(result);
+    });
     // Get all members
     app.get("/members", verifyToken, verifyAdmin, async (req, res) => {
       const query = { role: "member" };
