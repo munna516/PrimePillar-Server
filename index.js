@@ -144,7 +144,7 @@ async function run() {
       res.send(result);
     });
     // Get All Agreements
-    app.get("/agreements", async (req, res) => {
+    app.get("/agreements", verifyToken, async (req, res) => {
       const query = { status: "Pending" };
       const result = await agreementCollection.find(query).toArray();
       result.map((agreement) => {
@@ -226,6 +226,19 @@ async function run() {
       const result = await couponsCollection.find().toArray();
       res.send(result);
     });
+    // Delete A coupons
+    app.get(
+      "/delete-coupon/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const result = await couponsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      }
+    );
 
     // Validate Coupons
     app.post(
