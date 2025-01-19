@@ -234,7 +234,7 @@ async function run() {
       res.send(result);
     });
     // Get All Coupons
-    app.get("/coupons", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/all-coupons", async (req, res) => {
       const result = await couponsCollection.find().toArray();
       res.send(result);
     });
@@ -308,11 +308,11 @@ async function run() {
       res.send(result);
     });
     // Connect MongoDB Client
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.connect();
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // await client.close();
   }
