@@ -45,6 +45,7 @@ async function run() {
     const usersCollection = DB.collection("Users");
     const couponsCollection = DB.collection("Coupons");
     const paymentCollection = DB.collection("Payments");
+    const reviewsCollection = DB.collection("Reviews");
     // Verify admin
     const verifyAdmin = async (req, res, next) => {
       // console.log('data from verifyToken middleware--->', req.user?.email)
@@ -311,12 +312,17 @@ async function run() {
       const result = await announcementCollection.find().toArray();
       res.send(result);
     });
+    // Get all reviews 
+    app.get('/reviews',async(req,res)=>{
+      const result = await reviewsCollection.find().toArray()
+      res.send(result)
+    })
     // Connect MongoDB Client
-     await client.connect();
-     await client.db("admin").command({ ping: 1 });
-     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-     );
+    //  await client.connect();
+    //  await client.db("admin").command({ ping: 1 });
+    //  console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    //  );
   } finally {
     // await client.close();
   }
