@@ -99,6 +99,10 @@ async function run() {
       const result = await apartmentCollection.find().toArray();
       res.send(result);
     });
+    app.get("/featured-apartments",async(req,res)=>{
+      const result = await apartmentCollection.find().sort({ price: -1 }).limit(6).toArray();
+      res.send(result)
+    })
     // Get Apartment search by range
     app.get("/apartments-price", async (req, res) => {
       const { minPrice, maxPrice } = req.query;
@@ -308,11 +312,11 @@ async function run() {
       res.send(result);
     });
     // Connect MongoDB Client
-    // await client.connect();
-    // await client.db("admin").command({ ping: 1 });
-    // console.log(
-    //   "Pinged your deployment. You successfully connected to MongoDB!"
-    // );
+     await client.connect();
+     await client.db("admin").command({ ping: 1 });
+     console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+     );
   } finally {
     // await client.close();
   }
